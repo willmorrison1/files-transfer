@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-"""Script to send data using lftp."""
+"""
+Script to send data using lftp.
+
+Copyright (C) 2023 CNRS/Ecole Polytechnique
+"""
 import datetime as dt
 import glob
 import os
@@ -14,11 +18,13 @@ from typing import Dict, List
 import click
 import toml
 
+__author__ = "Marc-Antoine Drouin"
+__version__ = "1.0.0"
 
 # parameters
 ONE_DAY = dt.timedelta(days=1)
 
-
+# LFTP options
 LFTP_OPTIONS = (
     "cache flush;set net:timeout 10s;set net:max-retries 2;set net:idle 15s;debug 3"
 )
