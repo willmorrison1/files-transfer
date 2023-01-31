@@ -1,0 +1,10 @@
+[FTP]
+server = "ftp.server.fr"
+user = "ftp_user"
+password = "ftp_password"
+port = 21
+dir = "/ftp/directory"
+
+[files]
+dir_mask = "test/data"
+file_mask = "T3250605_%Y%m%d_%H%M%S.nc"
