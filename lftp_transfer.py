@@ -214,7 +214,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
         click.echo("ERROR: since should be lower than now.")
         sys.exit(1)
 
-    list_dates = [min_date + i * ONE_DAY for i in range((now - min_date).days)]
+    list_dates = [min_date + i * ONE_DAY for i in range((now - min_date).days + 1)]
 
     # search for files corresponding to the pattern
     # ------------------------------------------------------------------------
@@ -223,7 +223,6 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
 
     files_to_send = []
     for date in list_dates:
-
         dir_date_mask = re.sub(r"\%H|%M|\%S", "??", dir_mask)
         dir_date_mask = date.strftime(dir_date_mask)
 
