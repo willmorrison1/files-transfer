@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from shutil import which
+from shutil import which, rmtree
 from typing import Dict, List
 
 import click
@@ -188,8 +188,6 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
 
     # prepare environment
     # ------------------------------------------------------------------------
-    # create working dir
-    work_dir = Path(tempfile.mkdtemp())
 
     # read config file
     conf = read_config(config_file)
@@ -242,6 +240,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
         sys.exit(0)
 
     # create symlink in tmp dir
+    work_dir = Path(tempfile.mkdtemp())
     for file in files_to_send:
         os.symlink(file, os.path.join(work_dir, os.path.basename(file)))
 
@@ -253,7 +252,9 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     click.echo(f"lftp return code: {cmd_ret.returncode}")
     click.echo(f"lftp stdout: {cmd_ret.stdout}")
     click.echo(f"lftp stderr: {cmd_ret.stderr}")
-
+    
+    rmtree(work_dir, ignore_errors=False)
+    
     sys.exit(0)
 
 
