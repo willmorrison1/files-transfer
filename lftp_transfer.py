@@ -186,10 +186,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
         click.echo("ERROR: lftp is not available. Please install it.")
         sys.exit(1)
 
-    # prepare environment
-    # ------------------------------------------------------------------------
-
-    # read config file
+    # read the file containing the file upload parameters
     conf = read_config(config_file)
 
     # get date to search for
@@ -215,7 +212,6 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     list_dates = [min_date + i * ONE_DAY for i in range((now - min_date).days + 1)]
 
     # search for files corresponding to the pattern
-    # ------------------------------------------------------------------------
     dir_mask = conf["files"]["dir_mask"]
     file_mask = conf["files"]["file_mask"]
 
