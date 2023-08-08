@@ -102,7 +102,7 @@ def find_last_date_in_log(log_file: Path, file_mask: str) -> dt.datetime:
     if not list_dates:
         return None
 
-    return max(list_dates)
+    return max(list_dates) - dt.timedelta(minutes=60)
 
 
 def create_lftp_command(
