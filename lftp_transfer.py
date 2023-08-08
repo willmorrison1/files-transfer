@@ -19,7 +19,7 @@ import click
 import toml
 
 __author__ = "Marc-Antoine Drouin"
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 # parameters
 ONE_DAY = dt.timedelta(days=1)
