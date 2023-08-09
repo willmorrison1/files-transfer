@@ -142,6 +142,23 @@ def create_lftp_command(
     return lftp_command
 
 
+def update_min_date(config_file: Path, new_min_date: dt.datetime):
+    if new_min_date:
+        with open(get_min_date_file(config_file), "w") as f:
+            f.write(new_min_date.strftime("%Y%m%dT%H%M%S"))
+
+
+def get_min_date(config_file: Path):
+    with open(get_min_date_file(config_file), "r") as f:
+        date_string = f.read()
+    new_min_date = dt.datetime.strptime(date_string, "%Y%m%dT%H%M%S")
+    return new_min_date
+
+
+def get_min_date_file(config_file: Path):
+    return Path(config_file.name + ".min_date")
+
+
 @click.command()
 @click.argument(
     "config-file",
@@ -176,9 +193,17 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     # checks before running
     # ------------------------------------------------------------------------
     # check if first creation of log file
-    if not log_file.exists() and since is None:
-        click.echo("ERROR: for new log-file, --since option is required.")
+
+    min_date_file = get_min_date_file(config_file)
+
+    if not min_date_file.exists() and since is None:
+        click.echo(
+            "ERROR: no log of previous transfers found. --since option is required.")
         sys.exit(1)
+
+    # write min_date to file
+    min_date = since
+    update_min_date(config_file, min_date)
 
     # check if lftp is installed
     lftp_exe = check_lftp()
@@ -190,26 +215,18 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     conf = read_config(config_file)
 
     # get date to search for
-    if since is None:
-        # find last date in log file
-        min_date = find_last_date_in_log(log_file, conf["files"]["file_mask"])
-        click.echo(f"Date of Last sent file: {min_date}")
-
-        if min_date is None:
-            click.echo("no new file to send.")
-            sys.exit(0)
-
-    else:
-        min_date = since
+    min_date = get_min_date(config_file)
+    click.echo(f"Looking for new/updated files to send since: {min_date}")
 
     now = dt.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + ONE_DAY
 
     # check dates
     if min_date >= now:
-        click.echo("ERROR: since should be lower than now.")
+        click.echo("ERROR: min_date should be lower than now.")
         sys.exit(1)
 
-    list_dates = [min_date + i * ONE_DAY for i in range((now - min_date).days + 1)]
+    list_dates = [min_date + i *
+                  ONE_DAY for i in range((now - min_date).days + 1)]
 
     # search for files corresponding to the pattern
     dir_mask = conf["files"]["dir_mask"]
@@ -248,9 +265,16 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     click.echo(f"lftp return code: {cmd_ret.returncode}")
     click.echo(f"lftp stdout: {cmd_ret.stdout}")
     click.echo(f"lftp stderr: {cmd_ret.stderr}")
-    
+
+    # clean up the working directory
     rmtree(work_dir, ignore_errors=False)
-    
+
+    # update the min_date if there were any files transferred
+    # find last date in log file
+    min_date = find_last_date_in_log(log_file, conf["files"]["file_mask"])
+    click.echo(f"Date of Last sent file: {min_date}")
+    update_min_date(config_file, min_date)
+
     sys.exit(0)
 
 
