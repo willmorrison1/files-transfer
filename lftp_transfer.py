@@ -142,21 +142,21 @@ def create_lftp_command(
     return lftp_command
 
 
-def update_min_date(config_file: Path, new_min_date: dt.datetime):
+def update_min_date(log_file: Path, new_min_date: dt.datetime):
     if new_min_date:
-        with open(get_min_date_file(config_file), "w") as f:
+        with open(get_min_date_file(log_file), "w") as f:
             f.write(new_min_date.strftime("%Y%m%dT%H%M%S"))
 
 
-def get_min_date(config_file: Path):
-    with open(get_min_date_file(config_file), "r") as f:
+def get_min_date(log_file: Path):
+    with open(get_min_date_file(log_file), "r") as f:
         date_string = f.read()
     new_min_date = dt.datetime.strptime(date_string, "%Y%m%dT%H%M%S")
     return new_min_date
 
 
-def get_min_date_file(config_file: Path):
-    return Path(config_file.name + ".min_date")
+def get_min_date_file(log_file: Path):
+    return Path(str(log_file) + ".min_date")
 
 
 @click.command()
@@ -194,7 +194,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     # ------------------------------------------------------------------------
     # check if first creation of log file
 
-    min_date_file = get_min_date_file(config_file)
+    min_date_file = get_min_date_file(log_file)
 
     if not min_date_file.exists() and since is None:
         click.echo(
@@ -203,7 +203,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
 
     # write min_date to file
     min_date = since
-    update_min_date(config_file, min_date)
+    update_min_date(log_file, min_date)
 
     # check if lftp is installed
     lftp_exe = check_lftp()
@@ -215,7 +215,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     conf = read_config(config_file)
 
     # get date to search for
-    min_date = get_min_date(config_file)
+    min_date = get_min_date(log_file)
     click.echo(f"Looking for new/updated files to send since: {min_date}")
 
     now = dt.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + ONE_DAY
@@ -273,7 +273,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     # find last date in log file
     min_date = find_last_date_in_log(log_file, conf["files"]["file_mask"])
     click.echo(f"Date of Last sent file: {min_date}")
-    update_min_date(config_file, min_date)
+    update_min_date(log_file, min_date)
 
     sys.exit(0)
 
