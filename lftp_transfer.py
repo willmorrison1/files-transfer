@@ -257,8 +257,9 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     for file in files_to_send:
         os.symlink(file, os.path.join(work_dir, os.path.basename(file)))
 
-    # create lftp command
+    # create and run lftp command
     lftp_cmd = create_lftp_command(lftp_exe, conf, work_dir, log_file)
+    click.echo("Running lftp ...")
     cmd_ret = subprocess.run(lftp_cmd, capture_output=True, encoding="utf-8")
 
     click.echo(f"lftp command: {cmd_ret.args}")
