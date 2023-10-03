@@ -142,21 +142,31 @@ def create_lftp_command(
     return lftp_command
 
 
-def update_min_date(log_file: Path, new_min_date: dt.datetime):
-    if new_min_date:
-        with open(get_min_date_file(log_file), "w") as f:
-            f.write(new_min_date.strftime("%Y%m%dT%H%M%S"))
+class MinDate:
+    def __init__(self, log_file: Path):
+        self.log_file = log_file
+        self.min_date_file = Path(str(self.log_file) + ".min_date")
+        self.min_date = None
 
+    def __repr__(self):
+        return f"{str(self.min_date_file)} ({str(self.min_date)})"
 
-def get_min_date(log_file: Path):
-    with open(get_min_date_file(log_file), "r") as f:
-        date_string = f.read()
-    new_min_date = dt.datetime.strptime(date_string, "%Y%m%dT%H%M%S")
-    return new_min_date
+    def read(self):
+        with open(self.min_date_file, "r") as f:
+            date_string = f.read()
+        try:
+            new_min_date = dt.datetime.strptime(date_string, "%Y%m%dT%H%M%S")
+            self.min_date = new_min_date
+        except ValueError as e:
+            print(f"Could not parse date from {self.min_date_file}: {e}")
 
-
-def get_min_date_file(log_file: Path):
-    return Path(str(log_file) + ".min_date")
+    def write(self, new_min_date: dt.datetime):
+        try:
+            new_min_date_dt = new_min_date.strftime("%Y%m%dT%H%M%S")
+            with open(self.min_date_file, "w") as f:
+                f.write(new_min_date_dt)
+        except ValueError as e:
+            print(f"Could not write new min date: {e}")
 
 
 @click.command()
@@ -194,16 +204,17 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     # ------------------------------------------------------------------------
     # check if first creation of log file
 
-    min_date_file = get_min_date_file(log_file)
+    min_date = MinDate(log_file)
 
-    if not min_date_file.exists() and since is None:
+    if not min_date.log_file.exists() and since is None:
         click.echo(
             "ERROR: no log of previous transfers found. --since option is required.")
         sys.exit(1)
 
-    # write min_date to file
-    min_date = since
-    update_min_date(log_file, min_date)
+    if since:
+        min_date.write(since)
+    else:
+        min_date.read()
 
     # check if lftp is installed
     lftp_exe = check_lftp()
@@ -215,18 +226,18 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
     conf = read_config(config_file)
 
     # get date to search for
-    min_date = get_min_date(log_file)
-    click.echo(f"Looking for new/updated files to send since: {min_date}")
+    click.echo(
+        f"Looking for new/updated files to send since: {min_date.min_date}")
 
     now = dt.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + ONE_DAY
 
     # check dates
-    if min_date >= now:
-        click.echo("ERROR: min_date should be lower than now.")
+    if min_date.min_date >= now:
+        click.echo("ERROR: min_date should be lower than now. Quit.")
         sys.exit(1)
 
-    list_dates = [min_date + i *
-                  ONE_DAY for i in range((now - min_date).days + 1)]
+    list_dates = [min_date.min_date + i *
+                  ONE_DAY for i in range((now - min_date.min_date).days + 1)]
 
     # search for files corresponding to the pattern
     dir_mask = conf["files"]["dir_mask"]
@@ -245,7 +256,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
         # keep only file geater that min_date
         for file in files:
             file_dt = dt.datetime.strptime(os.path.basename(file), file_mask)
-            if file_dt > min_date:
+            if file_dt > min_date.min_date:
                 files_to_send.append(file)
 
     if not files_to_send:
@@ -272,9 +283,8 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
 
     # update the min_date if there were any files transferred
     # find last date in log file
-    min_date = find_last_date_in_log(log_file, conf["files"]["file_mask"])
-    click.echo(f"Date of Last sent file: {min_date}")
-    update_min_date(log_file, min_date)
+    min_date.write(find_last_date_in_log(log_file, conf["files"]["file_mask"]))
+    click.echo(f"Date of Last sent file: {min_date.min_date}")
 
     sys.exit(0)
 
