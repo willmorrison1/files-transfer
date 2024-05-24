@@ -1,8 +1,6 @@
 # Files transfer
 
-The script is made to send data using LFTP to an FTP server.
-
-The script use LFTP log file to determine the last file sent.
+The script is made to send data using [LFTP](https://linux.die.net/man/1/lftp) to an FTP server. The script use LFTP log file to determine the last file sent. This way, data are not constantly re-uploaded to the server. 
 
 ## Requirements
 
@@ -43,7 +41,7 @@ The script will look at the options `dir_mask` and `file_mask` in the `[files]` 
 
 ### First run
 
-For the first run, the script needs to create the first  lftp log file and so it needs to be provided the first date to look for files.
+For the first run, the script needs to create the first  lftp log file and so it needs to be provided the first date to look for files. e.g. here the first date to look for files is `2023-01-15`
 
 ```bash
 python lftp_transfer.py conf/conf_transfer.toml test/log/test.log --since '2023-01-15'
