@@ -2,6 +2,8 @@
 
 The script is made to send data using [LFTP](https://linux.die.net/man/1/lftp) to an FTP server. The script use LFTP log file to determine the last file sent. This way, data are not constantly re-uploaded to the server. 
 
+The original script was made by Marc-Antoine https://github.com/madrouin https://gitlab.in2p3.fr/ipsl/sirta/dev-info/tools/files-transfer/-/blob/main/lftp_transfer.py
+
 ## Requirements
 
 - Code should work with python >=3.7
