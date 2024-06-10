@@ -19,7 +19,7 @@ import click
 import toml
 
 __author__ = "Marc-Antoine Drouin"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 # parameters
 ONE_DAY = dt.timedelta(days=1)
@@ -206,7 +206,7 @@ def main(config_file: Path, log_file: Path, since: dt.datetime):
 
     min_date = MinDate(log_file)
 
-    if not min_date.log_file.exists() and since is None:
+    if not min_date.min_date_file.exists() and since is None:
         click.echo(
             "ERROR: no log of previous transfers found. --since option is required.")
         sys.exit(1)
